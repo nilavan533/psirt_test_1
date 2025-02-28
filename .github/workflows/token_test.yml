@@ -13,12 +13,13 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0  # Fetch full history to avoid push issues
+        ref: output_excel  # Ensures we are working on the correct branch
+        fetch-depth: 0  # Fetch full history to avoid issues with pulling
 
     - name: Set Up Python
       uses: actions/setup-python@v4
       with:
-        python-version: "3.10"
+        python-version: "3.10"  # Ensure compatibility
 
     - name: Install Dependencies
       run: pip install requests pandas openpyxl
@@ -27,9 +28,9 @@ jobs:
       env:
         OPENVULN_CLIENT_ID: ${{ secrets.OPENVULN_CLIENT_ID }}
         OPENVULN_CLIENT_SECRET: ${{ secrets.OPENVULN_CLIENT_SECRET }}
-      run: python psirt_checker.py  # Ensure this script generates the Excel output
+      run: python psirt_checker.py
 
-    - name: Rename Excel File with Date
+    - name: Rename Excel Output with Date
       run: |
         DATE=$(date +'%Y-%m-%d')
         mv Baseline_albr_extract.xlsx Baseline_albr_extract_$DATE.xlsx
@@ -39,10 +40,9 @@ jobs:
         git config --global user.email "github-actions@github.com"
         git config --global user.name "github-actions[bot]"
 
-    - name: Switch to Existing Output Branch
+    - name: Pull Latest Changes to Avoid Conflicts
       run: |
-        git checkout output_excel
-        git pull --rebase origin output_excel  # Ensure latest changes
+        git pull --rebase origin output_excel
 
     - name: Commit and Push Changes
       env:
@@ -50,4 +50,4 @@ jobs:
       run: |
         git add Baseline_albr_extract_*.xlsx
         git commit -m "Updated PSIRT vulnerability data - $(date +'%Y-%m-%d')" || echo "No changes to commit"
-        git push origin output_excel
+        git push https://nilavan533:${GH_PAT}@github.com/nilavan533/psirt_test_1.git output_excel
