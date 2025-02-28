@@ -42,6 +42,6 @@ jobs:
         run: |
           git add Baseline_albr_extract.xlsx
           git commit -m "Updated PSIRT vulnerability data"
-          git push origin "$(date +'%Y-%m-%d')"
+          git push --set-upstream origin "$BRANCH_NAME"
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
