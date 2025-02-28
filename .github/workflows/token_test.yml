@@ -19,10 +19,13 @@ jobs:
           python-version: '3.x'
 
       - name: Install Dependencies
-        run: pip install -r requirements.txt  # Ensure your dependencies are installed
+        run: pip install -r requirements.txt  # Ensure dependencies are installed
+
+      - name: List Files (Debugging)
+        run: ls -R  # Check if psirt_checker.py exists in the repo
 
       - name: Run PSIRT Script
-        run: python psirt_count_excel.py  # Execute the Python script
+        run: python psirt_checker.py  # Use the correct script name
 
       - name: Configure Git
         run: |
