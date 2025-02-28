@@ -36,7 +36,7 @@ jobs:
         run: |
           BRANCH_NAME="psirt-output-$(date +'%Y-%m-%d')"
           git checkout -b "$BRANCH_NAME"
-          echo "Branch created: $BRANCH_NAME"
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
 
       - name: Commit and push changes
         run: |
