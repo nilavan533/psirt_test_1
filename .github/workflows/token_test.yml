@@ -12,8 +12,6 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
-      with:
-        ref: output_excel  # Ensures the workflow operates on the output branch
 
     - name: Set Up Python
       uses: actions/setup-python@v4
@@ -29,26 +27,29 @@ jobs:
         OPENVULN_CLIENT_SECRET: ${{ secrets.OPENVULN_CLIENT_SECRET }}
       run: python psirt_checker.py
 
-    - name: Generate Output File Name
+    - name: Rename Output File with Date
       run: |
         DATE=$(date +'%Y-%m-%d')
-        echo "OUTPUT_FILE=Baseline_albr_extract_$DATE.xlsx" >> $GITHUB_ENV
-        mv Baseline_albr_extract.xlsx $OUTPUT_FILE
-
-    - name: Switch to output_excel Branch (or Create It)
-      run: |
-        git fetch origin output_excel || true
-        git checkout output_excel || git checkout -b output_excel
+        if [ -f "Baseline_albr_extract.xlsx" ]; then
+          mv Baseline_albr_extract.xlsx Baseline_albr_extract_$DATE.xlsx
+        else
+          echo "Error: Output Excel file not found!"
+          exit 1
+        fi
 
     - name: Configure Git
       run: |
         git config --global user.email "github-actions@github.com"
         git config --global user.name "github-actions[bot]"
 
+    - name: Create and Switch to Output Branch
+      run: |
+        git checkout -b output_excel || git checkout output_excel
+
     - name: Commit and Push Changes
       env:
         GH_PAT: ${{ secrets.GH_PAT }}
       run: |
-        git add $OUTPUT_FILE
-        git commit -m "Updated PSIRT vulnerability data ($OUTPUT_FILE)" || echo "No changes to commit"
+        git add Baseline_albr_extract_*.xlsx
+        git commit -m "Updated PSIRT vulnerability data - $(date +'%Y-%m-%d')" || echo "No changes to commit"
         git push https://nilavan533:${GH_PAT}@github.com/nilavan533/psirt_test_1.git output_excel
