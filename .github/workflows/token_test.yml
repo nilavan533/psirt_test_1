@@ -10,15 +10,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
+    - name: Checkout output_excel Branch
       uses: actions/checkout@v4
       with:
-        ref: output_excel  # Ensures the workflow operates on the output branch
+        ref: output_excel  # Checkout the correct branch
 
     - name: Set Up Python
       uses: actions/setup-python@v4
       with:
-        python-version: "3.10"  # Ensure compatibility
+        python-version: "3.10"
 
     - name: Install Dependencies
       run: pip install requests pandas openpyxl
@@ -32,23 +32,14 @@ jobs:
     - name: Generate Output File Name
       run: |
         DATE=$(date +'%Y-%m-%d')
-        echo "OUTPUT_FILE=Baseline_albr_extract_$DATE.xlsx" >> $GITHUB_ENV
-        mv Baseline_albr_extract.xlsx $OUTPUT_FILE
+        OUTPUT_FILE="Baseline_albr_extract_$DATE.xlsx"
+        echo "OUTPUT_FILE=$OUTPUT_FILE" >> $GITHUB_ENV
+        mv Baseline_albr_extract.xlsx "$OUTPUT_FILE"
 
-    - name: Switch to output_excel Branch (or Create It)
-      run: |
-        git fetch origin output_excel || true
-        git checkout output_excel || git checkout -b output_excel
-
-    - name: Configure Git
-      run: |
-        git config --global user.email "github-actions@github.com"
-        git config --global user.name "github-actions[bot]"
-
-    - name: Commit and Push Changes
+    - name: Commit and Push Changes to output_excel
       env:
         GH_PAT: ${{ secrets.GH_PAT }}
       run: |
-        git add $OUTPUT_FILE
+        git add "$OUTPUT_FILE"
         git commit -m "Updated PSIRT vulnerability data ($OUTPUT_FILE)" || echo "No changes to commit"
         git push https://nilavan533:${GH_PAT}@github.com/nilavan533/psirt_test_1.git output_excel
