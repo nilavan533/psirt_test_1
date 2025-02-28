@@ -1,41 +1,41 @@
-name: PSIRT Data Update
+name: PSIRT Vulnerability Check
 
 on:
   schedule:
-    - cron: '0 0 1,22 * *'  # Runs at midnight UTC on the 1st and 22nd of each month
+    - cron: "0 0 */21 * *"  # Runs every 3 weeks (21 days)
   workflow_dispatch:  # Allows manual execution
 
 jobs:
-  update-psirt-data:
+  run_psirt_check:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+    - name: Checkout Repository
+      uses: actions/checkout@v4
 
-      - name: Set Up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
+    - name: Set Up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"  # Ensure compatibility
 
-      - name: Install Dependencies
-        run: pip install -r requirements.txt  # Ensure dependencies are installed
+    - name: Install Dependencies
+      run: pip install requests pandas openpyxl
 
-      - name: List Files (Debugging)
-        run: ls -R  # Check if psirt_checker.py exists in the repo
+    - name: Run PSIRT Script
+      env:
+        OPENVULN_CLIENT_ID: ${{ secrets.OPENVULN_CLIENT_ID }}
+        OPENVULN_CLIENT_SECRET: ${{ secrets.OPENVULN_CLIENT_SECRET }}
+      run: python psirt_checker.py
 
-      - name: Run PSIRT Script
-        run: python psirt_checker.py  # Use the correct script name
+    - name: Configure Git
+      run: |
+        git config --global user.email "github-actions@github.com"
+        git config --global user.name "github-actions[bot]"
 
-      - name: Configure Git
-        run: |
-          git config --global user.email "github-actions@github.com"
-          git config --global user.name "github-actions[bot]"
-
-      - name: Commit and Push Changes
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
-        run: |
-          git add Baseline_albr_extract.xlsx
-          git commit -m "Updated PSIRT vulnerability data"
-          git push https://nilavan533:${GH_PAT}@github.com/nilavan533/psirt_test_1.git main
+    - name: Commit and Push Changes
+      env:
+        GH_PAT: ${{ secrets.GH_PAT }}
+      run: |
+        git add Baseline_albr_extract.xlsx
+        git commit -m "Updated PSIRT vulnerability data" || echo "No changes to commit"
+        git push https://nilavan533:${GH_PAT}@github.com/nilavan533/psirt_test_1.git main
