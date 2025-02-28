@@ -1,47 +1,38 @@
-name: PSIRT Vulnerability Check
+name: PSIRT Data Update
 
 on:
   schedule:
-    - cron: "0 2 * * *"  # Runs daily at 2 AM UTC
-  workflow_dispatch:  # Allows manual triggering
+    - cron: '0 0 1,22 * *'  # Runs at midnight UTC on the 1st and 22nd of each month
+  workflow_dispatch:  # Allows manual execution
 
 jobs:
-  run-psirt-check:
+  update-psirt-data:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set Up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.x"
+          python-version: '3.x'
 
-      - name: Install dependencies
-        run: pip install pandas requests openpyxl
+      - name: Install Dependencies
+        run: pip install -r requirements.txt  # Ensure your dependencies are installed
 
-      - name: Run PSIRT Checker
-        env:
-          OPENVULN_CLIENT_ID: ${{ secrets.OPENVULN_CLIENT_ID }}
-          OPENVULN_CLIENT_SECRET: ${{ secrets.OPENVULN_CLIENT_SECRET }}
-        run: python psirt_checker.py
+      - name: Run PSIRT Script
+        run: python psirt_count_excel.py  # Execute the Python script
 
       - name: Configure Git
         run: |
-          git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions[bot]"
 
-      - name: Create and switch to new branch
-        run: |
-          BRANCH_NAME="psirt-output-$(date +'%Y-%m-%d')"
-          git checkout -b "$BRANCH_NAME"
-          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
-
-      - name: Commit and push changes
+      - name: Commit and Push Changes
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           git add Baseline_albr_extract.xlsx
           git commit -m "Updated PSIRT vulnerability data"
-          git push --set-upstream origin "$BRANCH_NAME"
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          git push https://nilavan533:${GH_PAT}@github.com/nilavan533/psirt_test_1.git main
