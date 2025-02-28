@@ -1,37 +1,47 @@
-name: "PSIRT Vulnerability Check"
+name: PSIRT Vulnerability Check
 
 on:
   schedule:
     - cron: "0 2 * * *"  # Runs daily at 2 AM UTC
-  workflow_dispatch:  # Allows manual trigger
+  workflow_dispatch:  # Allows manual triggering
 
 jobs:
-  psirt_check:
+  run-psirt-check:
     runs-on: ubuntu-latest
 
     steps:
-      - name: "Checkout repository"
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: "Set up Python"
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: "3.x"
 
-      - name: "Install dependencies"
-        run: pip install -r requirements.txt
+      - name: Install dependencies
+        run: pip install pandas requests openpyxl
 
-      - name: "Run PSIRT check script"
+      - name: Run PSIRT Checker
         env:
           OPENVULN_CLIENT_ID: ${{ secrets.OPENVULN_CLIENT_ID }}
           OPENVULN_CLIENT_SECRET: ${{ secrets.OPENVULN_CLIENT_SECRET }}
         run: python psirt_checker.py
 
-      - name: "Commit and push changes"
+      - name: Configure Git
         run: |
           git config --global user.name "github-actions"
-          git config --global user.email "actions@github.com"
+          git config --global user.email "github-actions@github.com"
+
+      - name: Create and switch to new branch
+        run: |
+          BRANCH_NAME="psirt-output-$(date +'%Y-%m-%d')"
+          git checkout -b "$BRANCH_NAME"
+          echo "Branch created: $BRANCH_NAME"
+
+      - name: Commit and push changes
+        run: |
           git add Baseline_albr_extract.xlsx
           git commit -m "Updated PSIRT vulnerability data"
-          git push
-
+          git push origin "$(date +'%Y-%m-%d')"
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
