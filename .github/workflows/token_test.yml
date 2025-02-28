@@ -1,28 +1,37 @@
-name: Test Token Generation
+name: "PSIRT Vulnerability Check"
 
 on:
-  push:
-    branches:
-      - main
+  schedule:
+    - cron: "0 2 * * *"  # Runs daily at 2 AM UTC
   workflow_dispatch:  # Allows manual trigger
 
 jobs:
-  test_token:
+  psirt_check:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Repository
+      - name: "Checkout repository"
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: "Set up Python"
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
-      - name: Install Dependencies
-        run: pip install requests
+      - name: "Install dependencies"
+        run: pip install -r requirements.txt
 
-      - name: Test Token Generation
+      - name: "Run PSIRT check script"
         env:
           OPENVULN_CLIENT_ID: ${{ secrets.OPENVULN_CLIENT_ID }}
           OPENVULN_CLIENT_SECRET: ${{ secrets.OPENVULN_CLIENT_SECRET }}
-        run: python token_test.py
+        run: python psirt_checker.py
+
+      - name: "Commit and push changes"
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add Baseline_albr_extract.xlsx
+          git commit -m "Updated PSIRT vulnerability data"
+          git push
+
